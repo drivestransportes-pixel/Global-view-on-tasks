@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Daily Plan">
+<meta name="theme-color" content="#F7F5F2">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23C2651A' width='100' height='100' rx='20'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'>M</text></svg>">
+<title>Daily Command Center — Miguel</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F7F5F2;
+  --surface: #FFFFFF;
+  --surface2: #F0EDE8;
+  --surface3: #E8E4DE;
+  --border: #D4CFC7;
+  --border2: #C2BBB0;
+  --text: #1A1814;
+  --text2: #4A4640;
+  --text3: #7A756E;
+  --accent: #C2651A;
+  --accent2: #A8520F;
+  --accent-bg: #FDF3EB;
+  --green: #1A7A3D;
+  --green-bg: #EDF7F0;
+  --red: #B91C1C;
+  --red-bg: #FDF0F0;
+  --blue: #1D5BA6;
+  --blue-bg: #EDF3FB;
+  --purple: #7C3AED;
+  --purple-bg: #F3EDFD;
+  --cyan: #0E6F7E;
+  --cyan-bg: #EDFAFB;
+  --yellow: #92610A;
+  --yellow-bg: #FEF9EC;
+  --font: 'IBM Plex Sans', -apple-system, sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font); background: var(--bg); color: var(--text);
+  min-height: 100vh; padding: 20px; -webkit-font-smoothing: antialiased; line-height: 1.5;
+}
+
+.header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:18px; padding-bottom:14px; border-bottom:2px solid var(--text); }
+.header h1 { font-size:22px; font-weight:700; letter-spacing:-0.3px; }
+.header .sub { font-size:12px; font-family:var(--mono); color:var(--text3); font-weight:500; }
+
+.profile { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:6px; margin-bottom:16px; }
+.p-cell { background:var(--surface); border:1.5px solid var(--border); border-radius:8px; padding:8px 8px 6px; text-align:center; }
+.p-val { font-family:var(--mono); font-size:16px; font-weight:700; color:var(--text); }
+.p-lab { font-size:10px; color:var(--text3); font-weight:500; text-transform:uppercase; letter-spacing:0.3px; margin-top:1px; }
+.p-cell.warn { border-color:var(--red); background:var(--red-bg); }
+.p-cell.warn .p-val { color:var(--red); }
+.p-cell.good { border-color:var(--green); background:var(--green-bg); }
+.p-cell.good .p-val { color:var(--green); }
+.p-cell.target { border-color:var(--accent); background:var(--accent-bg); }
+.p-cell.target .p-val { color:var(--accent); }
+
+/* WAKE TIME PICKER */
+.wake-row {
+  display:flex; align-items:center; gap:10px; margin-bottom:14px;
+  padding:12px 16px; background:var(--surface); border:1.5px solid var(--accent);
+  border-radius:10px;
+}
+.wake-label { font-size:13px; font-weight:700; color:var(--text); white-space:nowrap; }
+.wake-btns { display:flex; gap:4px; flex-wrap:wrap; }
+.wake-btn {
+  font-family:var(--mono); font-size:12px; font-weight:600; padding:6px 12px;
+  border:1.5px solid var(--border); border-radius:6px; background:var(--surface2);
+  color:var(--text3); cursor:pointer; transition:all 0.15s;
+}
+.wake-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+.wake-btn:hover:not(.active) { border-color:var(--accent); color:var(--accent); }
+
+.phase-bar { display:flex; gap:6px; margin-bottom:14px; }
+.ph { flex:1; padding:8px 6px; text-align:center; border-radius:8px; border:1.5px solid var(--border); background:var(--surface); font-size:12px; font-weight:600; color:var(--text3); cursor:pointer; transition:all 0.15s; }
+.ph.active { border-color:var(--accent); background:var(--accent-bg); color:var(--accent); }
+.ph .ph-wk { font-family:var(--mono); font-size:10px; font-weight:500; margin-top:2px; }
+
+.toggle-row { display:flex; gap:6px; margin-bottom:14px; }
+.tog { flex:1; padding:12px 10px; border:1.5px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text3); font-family:var(--font); font-size:14px; font-weight:700; cursor:pointer; transition:all 0.15s; text-align:center; }
+.tog.active { background:var(--text); color:var(--bg); border-color:var(--text); }
+.tog .tog-sub { font-size:11px; font-weight:500; margin-top:2px; font-family:var(--mono); }
+.tog.active .tog-sub { color:var(--border); }
+
+.macro-row { display:flex; gap:6px; margin-bottom:14px; }
+.m-cell { flex:1; text-align:center; padding:10px 4px; background:var(--surface); border:1.5px solid var(--border); border-radius:10px; }
+.m-num { font-family:var(--mono); font-size:20px; font-weight:700; }
+.m-lab { font-size:10px; color:var(--text3); font-weight:600; text-transform:uppercase; letter-spacing:0.3px; margin-top:2px; }
+.m-num.kcal { color:var(--cyan); }
+.m-num.pro { color:var(--green); }
+.m-num.fat { color:var(--accent); }
+.m-num.carb { color:var(--blue); }
+
+.checklist { background:var(--surface); border:1.5px solid var(--border); border-radius:10px; padding:14px; margin-bottom:18px; }
+.cl-title { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
+.cl-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.cl-item { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:500; color:var(--text); padding:7px 10px; background:var(--surface2); border-radius:6px; }
+.cl-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+.tl { position:relative; padding-left:40px; margin-top:8px; }
+.tl::before { content:''; position:absolute; left:15px; top:8px; bottom:8px; width:2px; background:var(--border); }
+
+.block { position:relative; margin-bottom:12px; }
+.block .dot { position:absolute; left:-40px; top:14px; width:12px; height:12px; border-radius:50%; border:2.5px solid var(--border); background:var(--bg); z-index:2; }
+.block.food .dot { border-color:var(--green); background:var(--green-bg); }
+.block.supp .dot { border-color:var(--purple); background:var(--purple-bg); }
+.block.train .dot { border-color:var(--blue); background:var(--blue-bg); }
+.block.rest .dot { border-color:var(--red); background:var(--red-bg); }
+.block.habit .dot { border-color:var(--yellow); background:var(--yellow-bg); }
+
+.card { background:var(--surface); border:1.5px solid var(--border); border-radius:12px; padding:16px 18px; }
+.card-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+.card-time { font-family:var(--mono); font-size:12px; font-weight:600; color:var(--accent); }
+.card-title { font-size:16px; font-weight:700; color:var(--text); line-height:1.3; }
+.card-persona { font-size:10px; font-family:var(--mono); color:var(--text3); font-weight:500; text-transform:uppercase; letter-spacing:0.3px; margin-top:2px; }
+
+.badge { font-size:10px; font-family:var(--mono); padding:4px 10px; border-radius:5px; font-weight:700; flex-shrink:0; letter-spacing:0.3px; }
+.badge.food { background:var(--green-bg); color:var(--green); border:1px solid var(--green); }
+.badge.train { background:var(--blue-bg); color:var(--blue); border:1px solid var(--blue); }
+.badge.supp { background:var(--purple-bg); color:var(--purple); border:1px solid var(--purple); }
+.badge.rest { background:var(--red-bg); color:var(--red); border:1px solid var(--red); }
+.badge.habit { background:var(--yellow-bg); color:var(--yellow); border:1px solid var(--yellow); }
+
+.card-body { font-size:13.5px; color:var(--text2); line-height:1.75; }
+.card-body .row { padding-left:14px; position:relative; margin-bottom:4px; }
+.card-body .row::before { content:''; position:absolute; left:0; top:10px; width:5px; height:5px; border-radius:50%; background:var(--border2); }
+.card-body .row.bullet-green::before { background:var(--green); }
+.card-body .row.bullet-blue::before { background:var(--blue); }
+.card-body .row.bullet-purple::before { background:var(--purple); }
+.card-body .row.bullet-red::before { background:var(--red); }
+.card-body .row.bullet-yellow::before { background:var(--yellow); }
+
+.hl { color:var(--accent2); font-weight:700; }
+.mono { font-family:var(--mono); font-size:12px; font-weight:500; }
+.cals { font-family:var(--mono); font-size:12px; font-weight:600; color:var(--cyan); display:inline-block; margin-top:6px; padding:4px 10px; background:var(--cyan-bg); border:1px solid #B2E8EF; border-radius:5px; }
+.warn { color:var(--red); font-weight:700; }
+.tip { color:var(--yellow); font-weight:500; font-size:12.5px; }
+.options-box { margin-top:8px; padding:12px 14px; background:var(--surface2); border-radius:8px; border-left:3px solid var(--border2); font-size:13px; line-height:1.75; color:var(--text2); }
+.options-box .opt-title { font-size:10.5px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:4px; }
+
+.flags { margin-top:22px; padding:16px; background:var(--surface); border:1.5px solid var(--red); border-radius:12px; }
+.flags h3 { font-size:12px; font-weight:700; color:var(--red); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; }
+.flag-row { font-size:13px; font-weight:500; color:var(--text2); line-height:1.6; margin-bottom:6px; padding-left:16px; position:relative; }
+.flag-row::before { content:''; position:absolute; left:0; top:8px; width:7px; height:7px; border-radius:2px; }
+.flag-row.r::before { background:var(--red); }
+.flag-row.b::before { background:var(--blue); }
+
+@media print {
+  body { padding:12px; background:#fff; }
+  .tog,.ph,.wake-btn { cursor:default; }
+  .card,.block { break-inside:avoid; }
+}
+@media (max-width:420px) {
+  body { padding:14px; }
+  .cl-grid { grid-template-columns:1fr; }
+  .profile { grid-template-columns:repeat(3,1fr); }
+  .m-num { font-size:17px; }
+  .card-title { font-size:15px; }
+  .card-body { font-size:13px; }
+  .wake-btns { gap:3px; }
+  .wake-btn { padding:5px 8px; font-size:11px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div><h1>Daily Command Center</h1></div>
+  <div class="sub">Miguel &bull; 13-Week Transformation</div>
+</div>
+
+<div class="profile" id="profile"></div>
+<div class="wake-row" id="wakeRow"></div>
+<div class="phase-bar" id="phaseBar"></div>
+<div class="toggle-row" id="toggleRow"></div>
+<div class="macro-row" id="macroRow"></div>
+<div class="checklist" id="checklist"></div>
+<div class="tl" id="timeline"></div>
+<div class="flags" id="flags"></div>
+
+<script>
+let mode = 'training';
+let phase = 1;
+let wakeHour = 10; // default 10:00 AM
+let wakeMin = 0;
+
+// --- TIME UTILITIES ---
+function addMin(baseH, baseM, offsetMin) {
+  let total = baseH * 60 + baseM + offsetMin;
+  let h = Math.floor(total / 60) % 24;
+  let m = total % 60;
+  return { h, m };
+}
+
+function fmt(h, m) {
+  let suffix = h >= 12 ? 'PM' : 'AM';
+  let dh = h % 12; if (dh === 0) dh = 12;
+  return m === 0 ? dh + ':00 ' + suffix : dh + ':' + String(m).padStart(2,'0') + ' ' + suffix;
+}
+
+function t(offsetMin) {
+  let r = addMin(wakeHour, wakeMin, offsetMin);
+  return fmt(r.h, r.m);
+}
+
+function tRange(startOff, endOff) {
+  return t(startOff) + ' – ' + t(endOff);
+}
+
+// --- DATA ---
+const profileData = [
+  { val:'79 kg', lab:'Weight', cls:'' },
+  { val:'70-71', lab:'Target kg', cls:'target' },
+  { val:'26.3', lab:'BMI', cls:'warn' },
+  { val:'279', lab:'Triglyc.', cls:'warn' },
+  { val:'230', lab:'Cholest.', cls:'warn' },
+  { val:'104', lab:'Glucose', cls:'warn' },
+  { val:'5.4%', lab:'A1c', cls:'good' },
+  { val:'62', lab:'ALT', cls:'warn' },
+  { val:'116k', lab:'Platelets', cls:'warn' },
+];
+
+const macros = {
+  training: { kcal:2100, p:160, f:75, c:115 },
+  rest: { kcal:1850, p:160, f:80, c:65 },
+};
+
+const checklistItems = {
+  training: [
+    { text:'Protein: 160g', color:'var(--green)' },
+    { text:'Water: 2.5-3L', color:'var(--blue)' },
+    { text:'Steps: 8,000+', color:'var(--yellow)' },
+    { text:'Train: 60 min', color:'var(--blue)' },
+    { text:'Vacuums: 3-5 min', color:'var(--accent)' },
+    { text:'Omega-3 + D3', color:'var(--purple)' },
+    { text:'Log food in MFP', color:'var(--text3)' },
+  ],
+  rest: [
+    { text:'Protein: 160g', color:'var(--green)' },
+    { text:'Water: 2.5-3L', color:'var(--blue)' },
+    { text:'Steps: 6,000+', color:'var(--yellow)' },
+    { text:'Walk: 30-40 min', color:'var(--cyan)' },
+    { text:'Vacuums: 3-5 min', color:'var(--accent)' },
+    { text:'Omega-3 + D3', color:'var(--purple)' },
+    { text:'Mobility: 15 min', color:'var(--text3)' },
+  ],
+};
+
+/*
+  OFFSET MAP (minutes from wake):
+  +0     Wake + Shake + Supps
+  +10    Stomach Vacuums
+  +30    Hydration Block 1 start
+  +240   Lunch start (+4h)
+  +240   Zinc
+  +300   Hydration Block 2 start (+5h)
+  +450   Pre-workout (+7.5h)
+  +480   Training start (+8h)
+  +555   Training end (+9h15)
+  +570   Post-walk end (+9h30)
+  +690   Dinner start (+11.5h)
+  +750   Silimarina (+12.5h)
+  +780   Night snack (+13h)
+  +810   Wind-down (+13.5h)
+  +870   Lights out start (+14.5h)
+  +900   Lights out end (+15h)
+*/
+
+function getTrainingBlocks() {
+  const pL = phase===1?'Phase 1 — Foundation':phase===2?'Phase 2 — Intensification':'Phase 3 — Peak';
+  const pR = phase===1?'RPE 6-7':phase===2?'RPE 7-8':'RPE 8-9';
+  const pC = phase===1?'LISS 10-15 min post-lift':phase===2?'HIIT 2x/wk, LISS other days':'HIIT 3x/wk, LISS other days';
+  const pS = phase===1?'5 days — Upper/Lower/Full BW+Gym dual track':phase===2?'5 days — Push/Pull/Legs + supersets + barbell':'6 days — PPL x2 + deload Wk 13';
+  const pVac = phase===1?'3 sets x 15-sec hold':phase===2?'4 sets x 20-sec hold':'4 sets x 30-sec hold';
+
+  return [
+    { type:'food', time: t(0), title:'Wake — Protein Shake + Supplements', persona:'COACH MACRO + DR. INTERNIST', body:`
+      <div class="row bullet-green"><span class="hl">Shake:</span> 1 scoop Isopure Low Carb in water — <span class="mono">25g P / 1g C / 110 kcal</span></div>
+      <div class="row bullet-green"><span class="hl">Add-in:</span> 1 tbsp chia seeds <span class="mono">(5g fiber, 5g F, 70 kcal)</span> OR 1 tbsp almond butter <span class="mono">(8g F, 95 kcal)</span></div>
+      <div class="row bullet-blue"><span class="hl">Lemon water:</span> 1 glass warm — citrate binds calcium oxalate, prevents kidney stones</div>
+      <div class="row bullet-purple"><span class="hl">Omega-3:</span> 2000-3000 mg WITH shake (needs fat for absorption). AHA IIa for TG&gt;200</div>
+      <div class="row bullet-purple"><span class="hl">Vitamin D3:</span> 2000 IU — fat-soluble, absorbed with chia/almond fat</div>
+      <div class="cals">~200-250 kcal &bull; 25-28g P &bull; 5-8g F &bull; 3-5g C</div>` },
+
+    { type:'train', time: t(10), title:'Stomach Vacuums / Hipopresivos', persona:'COACH IRON + COACH MACRO', body:`
+      <div class="row bullet-blue"><span class="hl">What it is:</span> Isometric contraction of the transverse abdominis (TVA) — the deepest ab muscle that wraps your torso like a natural corset. NOT a crunch. Trains the muscle that pulls your belly inward.</div>
+      <div class="row bullet-green"><span class="hl">Why it matters:</span> Reduces waist circumference independent of fat loss. Strengthens core stability (protects lower back). Visible waist reduction in 4-6 weeks.</div>
+      <div class="options-box" style="border-left-color:var(--blue)">
+        <div class="opt-title" style="color:var(--blue)">Today's Protocol: ${pVac}</div>
+        <strong>Phase 1 (Wk 1-4):</strong> 3 sets x 15-sec hold, 15-sec rest. 4x/week.<br>
+        <strong>Phase 2 (Wk 5-8):</strong> 4 sets x 20-sec hold, 15-sec rest. 5x/week.<br>
+        <strong>Phase 3 (Wk 9-13):</strong> 4 sets x 30-sec hold, 15-sec rest. Daily.
+      </div>
+      <div class="options-box" style="margin-top:6px;border-left-color:var(--green)">
+        <div class="opt-title" style="color:var(--green)">How to perform — step by step</div>
+        <strong>1. Position:</strong> Standing upright, hands on hips. Can also do on all fours (easier) or seated.<br>
+        <strong>2. Exhale completely:</strong> Blow out ALL air. Every last bit. Critical step.<br>
+        <strong>3. Draw in:</strong> Without inhaling, pull belly button toward spine as hard as possible. Navel to backbone.<br>
+        <strong>4. Hold:</strong> Maintain contraction. Stomach should look hollow/concave.<br>
+        <strong>5. Breathe shallowly:</strong> Tiny sips of air through nose while holding the pull.<br>
+        <strong>6. Release:</strong> Exhale, relax. Rest 15s. Repeat.
+      </div>
+      <div class="options-box" style="margin-top:6px;border-left-color:var(--accent)">
+        <div class="opt-title" style="color:var(--accent)">Timing &amp; Rules</div>
+        <strong>When:</strong> Right after waking, before or just after shake. Empty stomach = best TVA activation.<br>
+        <strong>Where:</strong> Bathroom mirror (visual feedback). Works in hotel, gym, anywhere.<br>
+        <strong>Total time:</strong> 3-5 min. No equipment. Zero excuses when traveling.<br>
+        <strong>Track:</strong> Log max hold time weekly. Progress 15s &rarr; 30s &rarr; 45s over 13 weeks.
+      </div>
+      <div class="row bullet-red" style="margin-top:8px"><span class="warn">Do NOT do vacuums after eating</span> — wait 1+ hour post-meal. Morning empty stomach is ideal.</div>
+      <div class="row bullet-yellow"><span class="tip">Habit stack: "After I brush my teeth, I do vacuums in the mirror." Anchor to existing routine.</span></div>` },
+
+    { type:'habit', time: tRange(30, 240), title:'Hydration Block 1 + NEAT Steps', persona:'COACH MIND', body:`
+      <div class="row bullet-blue"><span class="hl">Water target:</span> 800 mL by lunch. Keep 1L bottle visible at desk (environmental cue).</div>
+      <div class="row bullet-yellow"><span class="hl">Steps:</span> Accumulate 3,000-4,000 by lunch. Walk during calls, take stairs, 10-min post-wake walk.</div>
+      <div class="row"><span class="tip">Habit stack — "After I pour coffee, I fill my water bottle." One cue, one action.</span></div>` },
+
+    { type:'food', time: tRange(240, 300), title:'Lunch — Main Meal (Largest)', persona:'COACH MACRO', body:`
+      <div class="row bullet-green"><span class="hl">Formula:</span> 200g protein source + 200g vegetables + 1 fist complex carb + 1 tbsp fat</div>
+      <div class="options-box">
+        <div class="opt-title">Protein (pick 1) — 45-55g</div>
+        200g chicken thigh &bull; 200g salmon/tuna &bull; 200g ground beef 90/10 &bull; 200g shrimp &bull; 3 eggs + 100g chicken
+      </div>
+      <div class="options-box" style="margin-top:6px">
+        <div class="opt-title">Carb (pick 1) — 30-40g C</div>
+        150g sweet potato &bull; 150g black beans/lentils &bull; 150g quinoa &bull; 1 tortilla + 80g beans &bull; 200g jicama
+      </div>
+      <div class="options-box" style="margin-top:6px">
+        <div class="opt-title">Vegetables (unlimited)</div>
+        Broccoli &bull; spinach &bull; zucchini &bull; peppers &bull; mushrooms &bull; asparagus &bull; nopales &bull; arugula &bull; cabbage
+      </div>
+      <div class="options-box" style="margin-top:6px">
+        <div class="opt-title">Fat (pick 1)</div>
+        1 tbsp olive oil &bull; 1/4 avocado &bull; 10-12 almonds
+      </div>
+      <div class="options-box" style="margin-top:6px;border-left-color:var(--green)">
+        <div class="opt-title" style="color:var(--green)">Quick combos you'll actually eat</div>
+        Carne asada + nopales + pinto beans + 2 tbsp guac<br>
+        Salmon + spinach in garlic + black beans<br>
+        Grilled chicken + roasted broccoli + sweet potato + olive oil<br>
+        Atun a la plancha + ensalada mixta + lentils
+      </div>
+      <div class="cals">~650-750 kcal &bull; 50g P &bull; 25g F &bull; 40g C</div>` },
+
+    { type:'supp', time: t(240), title:'Zinc — Mon / Wed / Fri ONLY', persona:'DR. INTERNIST', body:`
+      <div class="row bullet-purple"><span class="hl">Zinc:</span> 50 mg WITH lunch (food reduces GI irritation, improves absorption)</div>
+      <div class="row bullet-yellow">Supports: testosterone, immune function, hair follicle health (Goal #3: hair loss)</div>
+      <div class="row bullet-red"><span class="warn">Skip Tue/Thu/Sat/Sun</span> — chronic &gt;40 mg/day risks copper depletion</div>` },
+
+    { type:'habit', time: tRange(300, 450), title:'Hydration Block 2 + Step Check', persona:'COACH MIND', body:`
+      <div class="row bullet-blue"><span class="hl">Water:</span> another 800 mL. Running total ~1.6L by now.</div>
+      <div class="row bullet-yellow"><span class="hl">Step check:</span> should be at 5,000-6,000. If short, take a 15-min walk before training.</div>
+      <div class="row"><span class="tip">If-then: "If I'm under 5k steps by now, I walk to the gym instead of driving."</span></div>` },
+
+    { type:'food', time: t(450), title:'Pre-Workout Fuel (If Energy Low)', persona:'COACH MACRO + COACH IRON', body:`
+      <div class="row bullet-green"><span class="hl">Option:</span> 8-10 almonds + 1/2 banana or small apple <span class="mono">(~150 kcal, 20g C, 7g F)</span></div>
+      <div class="row">If lunch was recent and energy is fine, <strong>skip this</strong> — glycogen is sufficient.</div>
+      <div class="row bullet-red"><span class="warn">Do NOT train fully fasted.</span> Your TG/metabolic status needs stable glucose during effort.</div>` },
+
+    { type:'train', time: tRange(480, 555), title:'Training Session — '+pL, persona:'COACH IRON', body:`
+      <div class="options-box" style="border-left-color:var(--blue)">
+        <div class="opt-title" style="color:var(--blue)">Session Structure (60 min)</div>
+        <strong>Warm-up</strong> (5 min): Dynamic stretches, cat-cow, band pull-aparts, glute bridges<br>
+        <strong>Resistance</strong> (35-40 min): ${pS}<br>
+        <strong>Cardio</strong> (10-15 min): ${pC}<br>
+        <strong>Cool-down</strong> (5 min): Static stretches, diaphragmatic breathing
+      </div>
+      <div class="row bullet-blue" style="margin-top:8px"><span class="hl">Intensity:</span> ${pR} — autoregulate with RIR. If form breaks, lower weight.</div>
+      <div class="row bullet-red"><span class="hl">Lower back rule:</span> No loaded spinal flexion. Brace core every lift. Sharp pain = STOP.</div>
+      <div class="row bullet-blue"><span class="hl">Hydration:</span> Sip 500 mL during session.</div>
+      <div class="row"><span class="hl">Gym vs Hotel:</span> every day has a dual track. Traveling? Switch to hotel bodyweight version.</div>` },
+
+    { type:'train', time: tRange(555, 570), title:'Post-Workout Walk (Zone 1)', persona:'COACH IRON + COACH MACRO', body:`
+      <div class="row bullet-blue"><span class="hl">Duration:</span> 10-15 min easy walk. Conversational pace. HR &lt;120 bpm.</div>
+      <div class="row bullet-green"><span class="hl">Purpose:</span> glucose clearance, TG metabolism (lipoprotein lipase activation), parasympathetic shift.</div>
+      <div class="row">Accumulates remaining steps toward 8,000 target. Not optional.</div>` },
+
+    { type:'food', time: tRange(690, 750), title:'Dinner — Protein + Vegetables (Low Carb)', persona:'COACH MACRO', body:`
+      <div class="row bullet-green"><span class="hl">Formula:</span> 180g protein + 250g vegetables + minimal fat (cooking oil only)</div>
+      <div class="row"><span class="hl">Why low carb at night:</span> insulin sensitivity lowest in evening — carbs here worsen TG clearance overnight.</div>
+      <div class="options-box" style="border-left-color:var(--green)">
+        <div class="opt-title" style="color:var(--green)">Go-to dinner combos</div>
+        <strong>Poke bowl:</strong> 180g tuna/salmon + cucumber + edamame + seaweed — <span class="warn">NO rice, NO spicy mayo</span><br>
+        <strong>Grilled fish</strong> + steamed veg + lemon<br>
+        <strong>Chicken breast</strong> + arugula/tomato/cucumber salad + olive oil vinaigrette<br>
+        <strong>Shrimp stir-fry</strong> with vegetables in 1 tsp sesame oil
+      </div>
+      <div class="cals">~500-600 kcal &bull; 45-50g P &bull; 20g F &bull; 15-20g C</div>` },
+
+    { type:'supp', time: t(750), title:'Silimarina (Post-Dinner)', persona:'DR. INTERNIST', body:`
+      <div class="row bullet-purple"><span class="hl">Silimarina:</span> hepatoprotective for fatty liver risk (ALT 62, GGT 61). Take after dinner for absorption.</div>
+      <div class="row">Continue daily until follow-up bloodwork at Week 10-12.</div>` },
+
+    { type:'food', time: t(780), title:'Night Snack (If Hungry / Short on Protein)', persona:'COACH MACRO', body:`
+      <div class="row bullet-green"><span class="hl">Option A:</span> 150g Greek yogurt + cinnamon + 6 walnut halves <span class="mono">(18g P, 12g F, 8g C / ~200 kcal)</span></div>
+      <div class="row bullet-green"><span class="hl">Option B:</span> 1/2 scoop Isopure in water <span class="mono">(13g P, 0.5g C / ~55 kcal)</span></div>
+      <div class="row"><span class="tip">Check MFP: if &ge;145g protein, skip. If &lt;130g, eat Option A.</span></div>
+      <div class="row bullet-red"><span class="warn">Nothing after ${t(810)}.</span> Closes eating window. ~13-hour overnight fast.</div>` },
+
+    { type:'rest', time: t(810), title:'Wind-Down Protocol + Magnesium', persona:'COACH REST', body:`
+      <div class="row bullet-purple"><span class="hl">Magnesium:</span> 200-400 mg glycinate. Supports sleep onset, muscle recovery, bowel regularity.</div>
+      <div class="row bullet-red"><span class="hl">Screens:</span> blue light OFF / night mode. Suppresses melatonin by 50%+ (Harvard Sleep Medicine).</div>
+      <div class="row bullet-red"><span class="hl">Environment:</span> room 18-20°C, dark, quiet. Cool core temp is #1 sleep onset trigger.</div>
+      <div class="row bullet-yellow"><span class="hl">If mind races:</span> 4-7-8 breathing (inhale 4s, hold 7s, exhale 8s) x 3 rounds. Or 2-min brain dump to paper.</div>` },
+
+    { type:'rest', time: tRange(870, 900), title:'Lights Out — Target 8-9 hrs', persona:'COACH REST', body:`
+      <div class="row bullet-red">Consistency matters more than duration. Same bed/wake time &plusmn;30 min, even weekends.</div>
+      <div class="row"><span class="warn">If sleep latency &gt;30 min for 3+ nights:</span> flag to Dr. Internist. CBT-I is first-line (AASM).</div>
+      <div class="row bullet-blue">Recovery = adaptation. Muscle is built HERE, not in the gym. Cortisol resets during deep sleep.</div>
+      <div class="row"><span class="tip">Coach Mind: Set ${t(810)} phone alarm labeled "WIND DOWN" as behavioral trigger.</span></div>` },
+  ];
+}
+
+function getRestBlocks() {
+  const pVac = phase===1?'3 sets x 15-sec hold':phase===2?'4 sets x 20-sec hold':'4 sets x 30-sec hold';
+  return [
+    { type:'food', time: t(0), title:'Wake — Protein Shake + Supplements', persona:'COACH MACRO + DR. INTERNIST', body:`
+      <div class="row bullet-green"><span class="hl">Shake:</span> 1 scoop Isopure Low Carb + 1 tbsp chia/almond butter</div>
+      <div class="row bullet-blue"><span class="hl">Lemon water:</span> 1 glass warm (kidney stone prevention)</div>
+      <div class="row bullet-purple"><span class="hl">Supplements:</span> Omega-3 2000-3000 mg + D3 2000 IU (unchanged)</div>
+      <div class="cals">~200-250 kcal &bull; 25-28g P &bull; 5-8g F &bull; 3-5g C</div>` },
+
+    { type:'train', time: t(10), title:'Stomach Vacuums / Hipopresivos', persona:'COACH IRON + COACH MACRO', body:`
+      <div class="row bullet-blue"><span class="hl">Same protocol as training days.</span> Vacuums don't require recovery — do them daily or near-daily.</div>
+      <div class="options-box" style="border-left-color:var(--blue)">
+        <div class="opt-title" style="color:var(--blue)">Today: ${pVac}</div>
+        Exhale ALL air &rarr; pull belly button to spine &rarr; hold (stomach hollow) &rarr; shallow sips through nose &rarr; release &rarr; rest 15s &rarr; repeat.
+      </div>
+      <div class="row bullet-yellow"><span class="tip">Rest days = easiest days for this habit. No rush. Bathroom mirror after brushing teeth.</span></div>` },
+
+    { type:'train', time: tRange(30, 120), title:'Active Recovery Walk (Zone 2)', persona:'COACH IRON', body:`
+      <div class="row bullet-blue"><span class="hl">Duration:</span> 30-40 min easy walking. Conversational pace. HR 100-130 bpm.</div>
+      <div class="row bullet-green"><span class="hl">Purpose:</span> NEAT calorie burn, TG clearance, blood flow for muscle recovery.</div>
+      <div class="row bullet-yellow"><span class="hl">Steps:</span> Gets you 3,000-4,000. Rest-day minimum: 6,000-8,000 total.</div>
+      <div class="row"><span class="tip">Traveling? Walk to a coffee shop, explore the area. Movement doesn't need a gym.</span></div>` },
+
+    { type:'habit', time: tRange(120, 240), title:'Hydration Block 1', persona:'COACH MIND', body:`
+      <div class="row bullet-blue"><span class="hl">Water:</span> 800 mL by lunch. Total daily target: 2.5-3L.</div>
+      <div class="row bullet-yellow">Keep accumulating steps. Take stairs, walk during calls.</div>` },
+
+    { type:'food', time: tRange(240, 300), title:'Lunch — Main Meal (LOWER CARB)', persona:'COACH MACRO', body:`
+      <div class="row bullet-green"><span class="hl">Formula:</span> 200g protein + 250g vegetables + fat source. <span class="warn">Half the carb portion vs training day.</span></div>
+      <div class="row"><span class="hl">Rest-day logic:</span> lower glycogen demand = lower carb need. The 250 kcal deficit comes from HERE.</div>
+      <div class="options-box" style="border-left-color:var(--green)">
+        <div class="opt-title" style="color:var(--green)">Rest-day lunch combos</div>
+        200g salmon + large spinach salad + 1/4 avocado (skip starchy carb)<br>
+        Carne asada + grilled vegetables + small beans (80g)<br>
+        3 eggs + 100g chicken + massive salad + olive oil dressing<br>
+        Tuna poke salad bowl (no rice, extra cucumber/edamame)
+      </div>
+      <div class="cals">~550-650 kcal &bull; 50g P &bull; 30g F &bull; 20g C</div>` },
+
+    { type:'supp', time: t(240), title:'Zinc — Mon / Wed / Fri ONLY', persona:'DR. INTERNIST', body:`
+      <div class="row bullet-purple"><span class="hl">Zinc:</span> 50 mg WITH lunch. Check day of week. Skip Tue/Thu/Sat/Sun.</div>` },
+
+    { type:'train', time: tRange(300, 420), title:'Mobility + Foam Rolling (Recommended)', persona:'COACH IRON', body:`
+      <div class="row bullet-blue"><span class="hl">Duration:</span> 15-20 min. Not a workout — a recovery investment.</div>
+      <div class="options-box" style="border-left-color:var(--blue)">
+        <div class="opt-title" style="color:var(--blue)">Focus areas (for your lower back)</div>
+        <strong>Hip flexors:</strong> 90/90 rotation, couch stretch (60s each side)<br>
+        <strong>T-spine:</strong> foam roller extensions, open books (10 reps each)<br>
+        <strong>Lower back:</strong> cat-cow (10), dead bug (10 each), bird-dog (10 each)<br>
+        <strong>Hotel:</strong> World's greatest stretch + pigeon + wall slides
+      </div>
+      <div class="row"><span class="tip">Habit stack: "After lunch cleanup, I foam roll 15 min." Low barrier, high payoff.</span></div>` },
+
+    { type:'habit', time: tRange(420, 690), title:'Hydration Block 2 + Leisure', persona:'COACH MIND + COACH REST', body:`
+      <div class="row bullet-blue"><span class="hl">Water:</span> another 800 mL. Should hit 2L+ by dinner.</div>
+      <div class="row bullet-yellow"><span class="hl">Steps:</span> should be near 6,000+. Short walk if behind.</div>
+      <div class="row"><span class="tip">Social eating? Grilled protein + salad, sparkling water with lime. No alcohol needed.</span></div>` },
+
+    { type:'food', time: tRange(690, 750), title:'Dinner — Protein + Veg (Low Carb)', persona:'COACH MACRO', body:`
+      <div class="row bullet-green">Same as training day: 180g protein + 250g veg + minimal fat.</div>
+      <div class="row">Poke (no rice), grilled fish + veg, chicken salad, shrimp stir-fry.</div>
+      <div class="cals">~500-600 kcal &bull; 45-50g P &bull; 20g F &bull; 15g C</div>` },
+
+    { type:'supp', time: t(750), title:'Silimarina (Post-Dinner)', persona:'DR. INTERNIST', body:`
+      <div class="row bullet-purple"><span class="hl">Silimarina:</span> daily, after dinner. Hepatoprotective. Continue until bloodwork recheck.</div>` },
+
+    { type:'food', time: t(780), title:'Night Snack (If Hungry)', persona:'COACH MACRO', body:`
+      <div class="row bullet-green"><span class="hl">Option A:</span> 150g Greek yogurt + cinnamon + 6 walnuts <span class="mono">(18g P, 12g F / ~200 kcal)</span></div>
+      <div class="row bullet-green"><span class="hl">Option B:</span> 1/2 scoop Isopure <span class="mono">(13g P / ~55 kcal)</span></div>
+      <div class="row bullet-red"><span class="warn">Close eating window by ${t(810)}.</span></div>` },
+
+    { type:'rest', time: t(810), title:'Wind-Down + Magnesium', persona:'COACH REST', body:`
+      <div class="row bullet-purple"><span class="hl">Magnesium:</span> 200-400 mg glycinate.</div>
+      <div class="row bullet-red"><span class="hl">Screens off / night mode.</span> Cool room 18-20°C. 4-7-8 breathing if needed.</div>
+      <div class="row bullet-blue">Rest-day sleep is critical — adaptation happens here, not in the gym.</div>` },
+
+    { type:'rest', time: tRange(870, 900), title:'Lights Out — Target 8-9 hrs', persona:'COACH REST', body:`
+      <div class="row bullet-red">Same bed/wake &plusmn;30 min every night including rest days and weekends.</div>` },
+  ];
+}
+
+const flagsData = [
+  { text:'Sharp lower back pain during ANY lift → stop immediately, do not push through', cls:'r' },
+  { text:'Joint pain lasting >2 weeks → flag to Dr. Internist, modify training', cls:'r' },
+  { text:'Dizziness, chest pain, unusual shortness of breath → EMERGENCY — seek care NOW', cls:'r' },
+  { text:'Weight loss >1.5 kg/week for 2+ weeks → muscle loss risk, increase calories by 200', cls:'r' },
+  { text:'Dark urine despite 2.5L+ water → kidney stone flag, see doctor within 48 hrs', cls:'r' },
+  { text:'Bloodwork recheck: Week 10-12. Lipid panel, ALT/GGT, fasting glucose, CBC (platelets)', cls:'b' },
+  { text:'Weigh daily AM after bathroom. Track WEEKLY AVERAGE. Ignore single-day ±1-2 kg swings.', cls:'b' },
+  { text:'2-week stall? Reduce rest-day kcal by 100 OR add 2,000 steps. One variable at a time.', cls:'b' },
+  { text:'90/10 rule: 90% of meals follow framework, 10% flexibility won\'t derail progress.', cls:'b' },
+];
+
+// --- RENDER ---
+function render() {
+  document.getElementById('profile').innerHTML = profileData.map(p =>
+    `<div class="p-cell ${p.cls}"><div class="p-val">${p.val}</div><div class="p-lab">${p.lab}</div></div>`
+  ).join('');
+
+  // Wake time picker
+  const wakeOptions = [
+    {h:6,m:0},{h:7,m:0},{h:8,m:0},{h:9,m:0},{h:10,m:0},{h:11,m:0},{h:12,m:0}
+  ];
+  document.getElementById('wakeRow').innerHTML = `
+    <div class="wake-label">Wake time:</div>
+    <div class="wake-btns">
+      ${wakeOptions.map(w => {
+        const active = w.h===wakeHour && w.m===wakeMin;
+        return `<div class="wake-btn ${active?'active':''}" onclick="setWake(${w.h},${w.m})">${fmt(w.h,w.m)}</div>`;
+      }).join('')}
+    </div>
+  `;
+
+  document.getElementById('phaseBar').innerHTML = [
+    {n:1,label:'Foundation',wk:'Wk 1-4'},
+    {n:2,label:'Intensify',wk:'Wk 5-8'},
+    {n:3,label:'Peak',wk:'Wk 9-13'},
+  ].map(p=>`<div class="ph ${phase===p.n?'active':''}" onclick="setPhase(${p.n})">${p.label}<div class="ph-wk">${p.wk}</div></div>`).join('');
+
+  document.getElementById('toggleRow').innerHTML = [
+    {key:'training',label:'Training Day',sub:'2,100 kcal'},
+    {key:'rest',label:'Rest Day',sub:'1,850 kcal'},
+  ].map(t=>`<div class="tog ${mode===t.key?'active':''}" onclick="setMode('${t.key}')">${t.label}<div class="tog-sub">${t.sub}</div></div>`).join('');
+
+  const m=macros[mode];
+  document.getElementById('macroRow').innerHTML = `
+    <div class="m-cell"><div class="m-num kcal">${m.kcal}</div><div class="m-lab">kcal</div></div>
+    <div class="m-cell"><div class="m-num pro">${m.p}g</div><div class="m-lab">protein</div></div>
+    <div class="m-cell"><div class="m-num fat">${m.f}g</div><div class="m-lab">fat</div></div>
+    <div class="m-cell"><div class="m-num carb">${m.c}g</div><div class="m-lab">carbs</div></div>`;
+
+  const cl=checklistItems[mode];
+  document.getElementById('checklist').innerHTML = `
+    <div class="cl-title">Daily Non-Negotiables</div>
+    <div class="cl-grid">${cl.map(c=>`<div class="cl-item"><div class="cl-dot" style="background:${c.color}"></div>${c.text}</div>`).join('')}</div>`;
+
+  const blocks = mode==='training' ? getTrainingBlocks() : getRestBlocks();
+  document.getElementById('timeline').innerHTML = blocks.map(b=>`
+    <div class="block ${b.type}">
+      <div class="dot"></div>
+      <div class="card">
+        <div class="card-top">
+          <div>
+            <div class="card-time">${b.time}</div>
+            <div class="card-title">${b.title}</div>
+            <div class="card-persona">${b.persona}</div>
+          </div>
+          <span class="badge ${b.type}">${b.type==='food'?'MEAL':b.type==='train'?'TRAIN':b.type==='supp'?'SUPPS':b.type==='rest'?'SLEEP':'HABIT'}</span>
+        </div>
+        <div class="card-body">${b.body}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('flags').innerHTML = `
+    <h3>Red Flags + Checkpoints</h3>
+    ${flagsData.map(f=>`<div class="flag-row ${f.cls}">${f.text}</div>`).join('')}`;
+}
+
+function setMode(m){mode=m;render()}
+function setPhase(p){phase=p;render()}
+function setWake(h,m){wakeHour=h;wakeMin=m;render()}
+
+render();
+</script>
+</body>
+</html>
